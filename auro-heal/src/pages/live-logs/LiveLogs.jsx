@@ -22,34 +22,45 @@ export function LiveLogs() {
   // Define fetchLogs as a useCallback to avoid recreating it
   const fetchLogs = useCallback(async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/logs/recent");
-      const data = await res.json();
+      const res = await fetch(
+        `${import.meta.env.VITE_API_LINK}/api/logs/recent`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'x-api-key': import.meta.env.VITE_API_KEY,
+          },
+        }
+      )
 
-      if (!isMountedRef.current) return;
+      const data = await res.json()
 
-      setLoading(false);
+      if (!isMountedRef.current) return
 
-      if (data.logs && Array.isArray(data.logs)) {
+      setLoading(false)
+
+      if (Array.isArray(data.logs)) {
         setLogs((prev) => {
           const seen = new Set(
-            prev.map((l) => `${l.env}-${l.app}-${l.level}-${l.msg}`),
-          );
+            prev.map((l) => `${l.env}-${l.app}-${l.level}-${l.msg}`)
+          )
 
           const newLogs = data.logs.filter((l) => {
-            const key = `${l.env}-${l.app}-${l.level}-${l.msg}`;
-            if (seen.has(key)) return false;
-            seen.add(key);
-            return true;
-          });
+            const key = `${l.env}-${l.app}-${l.level}-${l.msg}`
+            if (seen.has(key)) return false
+            seen.add(key)
+            return true
+          })
 
-          return [...newLogs, ...prev].slice(0, 500);
-        });
+          return [...newLogs, ...prev].slice(0, 500)
+        })
       }
+
     } catch (err) {
-      console.error("Log fetch error", err);
-      setLoading(false);
+      console.error("Log fetch error", err)
+      setLoading(false)
     }
-  }, []);
+  }, [])
 
   // Set up polling as a separate effect
   useEffect(() => {

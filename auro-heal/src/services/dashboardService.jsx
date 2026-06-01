@@ -1,30 +1,21 @@
-// src/services/dashboardService.js
-
-import axios from 'axios'
-
-const API = 'http://localhost:5000/api/dashboard'
+import api from './api'
 
 export const getDashboard = async () => {
-  const res = await axios.get(API)
+  const res = await api.get('/dashboard')
   return res.data
 }
 
 export const getApps = async () => {
-  const res = await axios.get(`${API}/apps`)
+  const res = await api.get('/dashboard/apps')
   return res.data
 }
 
 export const getEnvironments = async () => {
-  const res = await axios.get(`${API}/environments`)
+  const res = await api.get('/dashboard/environments')
   return res.data
 }
 
 export const getFixed = async () => {
-  const res = await axios.get(`${API}/fixed`)
-  return res.data
-}
-
-export const getFixSteps = async () => {
-  const res = await axios.get(`${API}/fix-steps`)
+  const res = await api.get('/dashboard/fixed')
   return res.data
 }

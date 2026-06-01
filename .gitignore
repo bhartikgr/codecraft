@@ -1,2 +1,3 @@
-/auro-backend/node_modules
 auro-backend/.env
+/auro-backend/node_modules
+/auro-backend/fix-project

@@ -3,15 +3,9 @@
 const { getAllAppsLogs } = require('../services/awsService')
 
 async function getDashboardData () {
-  // =========================================
-  // REAL AWS DATA
-  // =========================================
 
   const aws = await getAllAppsLogs()
 
-  // =========================================
-  // MOCK AZURE
-  // =========================================
 
   const azure = {
     id: 'azure',
@@ -35,9 +29,6 @@ async function getDashboardData () {
     errorLogs: []
   }
 
-  // =========================================
-  // MOCK GCP
-  // =========================================
 
   const gcp = {
     id: 'gcp',
@@ -61,9 +52,6 @@ async function getDashboardData () {
     errorLogs: []
   }
 
-  // =========================================
-  // MOCK VPS
-  // =========================================
 
   const vps = {
     id: 'vps',
@@ -87,14 +75,8 @@ async function getDashboardData () {
     errorLogs: []
   }
 
-  // =========================================
-  // DYNAMIC APPS
-  // =========================================
 
   const apps = [
-    // ============================
-    // REAL AWS APP
-    // ============================
 
     {
       id: 'app-01',
@@ -123,9 +105,6 @@ async function getDashboardData () {
       branch: 'main'
     },
 
-    // ============================
-    // MOCK APPS
-    // ============================
 
     {
       id: 'app-02',
@@ -180,10 +159,6 @@ async function getDashboardData () {
     }
   ]
 
-  // =========================================
-  // FIXED
-  // =========================================
-
   const fixed = [
     {
       id: 'fix-01',
@@ -214,9 +189,6 @@ async function getDashboardData () {
     }
   ]
 
-  // =========================================
-  // FIX STEPS
-  // =========================================
 
   const fixSteps = [
     {
@@ -252,9 +224,6 @@ async function getDashboardData () {
     }
   ]
 
-  // =========================================
-  // FINAL RESPONSE
-  // =========================================
 
   return {
     environments: [aws, azure, gcp, vps],
@@ -265,10 +234,8 @@ async function getDashboardData () {
 
     fixSteps,
 
-    // GLOBAL LOGS
     logs: aws.logs || [],
 
-    // GLOBAL ERRORS
     errorLogs: aws.errorLogs || []
   }
 }
