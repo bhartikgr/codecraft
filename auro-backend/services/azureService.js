@@ -178,7 +178,7 @@ async function getAzureData() {
         error: errors?.[0]?.Message || "No errors found",
 
         app: app.id,
-        repo: "",
+        repo: 'https://github.com/dorthyuser/userprojects',
         branch: app.name,
 
         status:

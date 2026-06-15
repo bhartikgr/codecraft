@@ -3,8 +3,9 @@ const { v4: uuidv4 } = require('uuid');
 const { runFixPipeline } = require('../core/fixPipeline');
 const path = require('path')
 const { commitProjectRepository } = require('../core/git/gitCommit')
-const { getPaths } = require('./utils/paths')
+const { getPaths } = require('../core/utils/paths')
 const fixJobs = new Map();
+const { createLogger } = require('../core/logger/logger')
 
 exports.startFix = async (req, res) => {
   try {
@@ -77,43 +78,70 @@ exports.getFixStatus = async (req, res) => {
   }
 };
 
-const BASE = path.resolve(__dirname, '../fix-project')
-
 exports.commitFix = async (req, res) => {
   try {
-    const { repoUrl, branch, projectName, message, mainbranch } = req.body
-
-    const repoName = repoUrl.split('/').pop().replace(/\.git$/, '')
-    const paths = getPaths(projectName, repoName, branch)
+    const {
+      repoUrl,
+      branch,
+      projectName,
+      message,
+      mainbranch,
+    } = req.body
 
     if (!repoUrl || !branch || !projectName || !message || !mainbranch) {
       return res.status(400).json({
         success: false,
-        message: 'repoUrl, branch, projectName, message, and mainbranch are required',
+        message:
+          'repoUrl, branch, projectName, message, and mainbranch are required',
       })
     }
+
+    const repoName = repoUrl
+      .split('/')
+      .pop()
+      .replace(/\.git$/, '')
+
+    const paths = getPaths(projectName, repoName, mainbranch)
+
+    const {
+      uiLog,
+      devLog,
+      logFilePath,
+    } = createLogger(paths.logFile)
+
+    uiLog('🚀 Commit request received')
+    devLog(`Repo: ${repoUrl}`)
+    devLog(`Branch: ${branch}`)
+    devLog(`Project: ${projectName}`)
+    devLog(`Message: ${message}`)
 
     await commitProjectRepository({
       repoPath: paths.fixDir,
       branchName: branch,
       user: 'dorthyuser',
-      message: message,
+      message,
+      logger: {
+        uiLog,
+        devLog,
+      },
     })
+
+    uiLog('✅ Commit completed')
 
     return res.json({
       success: true,
       committed: true,
       branch,
       message,
+      logFilePath,
       pr: `${repoUrl}/pull/new/${branch}`,
     })
-
   } catch (err) {
+    console.error('commitFix error:', err)
+
     return res.status(500).json({
       success: false,
-      message: err.message || 'Internal server error',
+      message: err.message || err.error || 'Internal server error',
     })
-    console.error('commitFix error:', err)
   }
 }
-

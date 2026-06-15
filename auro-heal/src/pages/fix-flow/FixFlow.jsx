@@ -17,7 +17,7 @@ import {
 // Initial steps — all start as not done
 
 
-export function FixFlow({ app, onClose, onFixed }) {
+export function FixFlow({ app, onClose }) {
 
   const [stage, setStage] = useState("review");
   const [currentStatus, setCurrentStatus] = useState("analyzing");
@@ -54,13 +54,17 @@ export function FixFlow({ app, onClose, onFixed }) {
       setStage("fixing");
       setCurrentStatus("analyzing");
       setMainBranch(appBranch);
+      const logsText = app.logs?.slice(0, 4)
+        .map((l) => (typeof l === "string" ? l : l.message))
+        .join("\n");
 
       const res = await startFixFlow({
         appId: app.id,
         projectName: app.name,
         repoUrl: appRepo,
         branch: appBranch,
-        error: app.error,
+        error: app.error + logsText,
+
         instructions: instructions.trim() ? instructions : undefined,
       });
 
@@ -100,7 +104,7 @@ export function FixFlow({ app, onClose, onFixed }) {
       setBusy(false);
       setStage("committed");
       setSucccessMsg("Patch committed successfully!");
-      onFixed?.(app);
+      // onFixed?.(app);
     } catch (err) {
       console.error(err);
       setBusy(false);
