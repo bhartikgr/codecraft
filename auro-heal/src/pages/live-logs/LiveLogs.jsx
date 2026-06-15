@@ -313,7 +313,7 @@ export function LiveLogs() {
                     {appFilter === "all" && (
                       <span className="text-[#7a9688] shrink-0">{log.app}</span>
                     )}
-                    <span
+                    <span style={{wordBreak:"break-word"}}
                       className={`flex-1 ${st.text !== "text-ink-mute"
                           ? st.text
                           : "text-[#adc4b8]"

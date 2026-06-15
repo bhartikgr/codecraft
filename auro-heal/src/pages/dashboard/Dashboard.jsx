@@ -124,7 +124,7 @@ function AppRow({ app, onFix }) {
         <SevBadge sev={app.severity} />
       </div>
       <div className="min-w-0">
-        <div className="font-mono text-[12px]" style={{wordBreak:"break-all"}}>{app.errorType}</div>
+        <div className="font-mono text-[12px]" style={{wordBreak:"break-word"}}>{app.errorType}</div>
         <div className="font-mono text-[11px] text-ink-mute mt-0.5 truncate">
           {app.error?.split("\n")[0]}
         </div>

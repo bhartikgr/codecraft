@@ -202,30 +202,33 @@ export function FixFlow({ app, onClose }) {
             <EnvBadge env={app.env} />
           </div>
 
-          <div className="bg-coral-soft border border-coral/30 rounded-md px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
-            {app.error}
-          </div>
+
 
           {stage === "review" && (
-            <div className="space-y-3">
-              <div className="text-[12px] text-ink-mute">
-                Auro will apply an AI-generated patch, open a pull request, and watch for regressions.
+            <>
+              <div style={{ wordBreak: "break-word" }} className="bg-coral-soft border border-coral/30 rounded-md px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
+                {app.error}
               </div>
-              <div className="bg-sunken rounded-md divide-y divide-line text-[12px]">
-                {app.logs?.slice(0, 4).map((l, i) => (
-                  <div key={i} className="px-3.5 py-2 font-mono text-ink-mute flex gap-3">
-                    {typeof l !== "string" && (
-                      <span className="text-[#4a6a58] shrink-0 text-[10px]">
-                        {new Date(l.timestamp).toISOString()}
+              <div className="space-y-3">
+                <div className="text-[12px] text-ink-mute">
+                  Auro will apply an AI-generated patch, open a pull request, and watch for regressions.
+                </div>
+                <div className="bg-sunken rounded-md divide-y divide-line text-[12px]">
+                  {app.logs?.slice(0, 4).map((l, i) => (
+                    <div key={i} className="px-3.5 py-2 font-mono text-ink-mute flex gap-3">
+                      {typeof l !== "string" && (
+                        <span className="text-[#4a6a58] shrink-0 text-[10px]">
+                          {new Date(l.timestamp).toISOString()}
+                        </span>
+                      )}
+                      <span style={{ wordBreak: "break-all" }}>
+                        {typeof l === "string" ? l : l.message}
                       </span>
-                    )}
-                    <span style={{ wordBreak: "break-all" }}>
-                      {typeof l === "string" ? l : l.message}
-                    </span>
-                  </div>
-                ))}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            </>
           )}
 
           {stage === "config" && (

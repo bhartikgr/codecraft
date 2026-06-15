@@ -112,7 +112,7 @@ async function fetchLogsOnce() {
         (FunctionAppLogs
           | where Level in ("Error", "Critical")
           | project TimeGenerated, AppRoleName = HostInstanceId, Message, SeverityLevel = -1, Level)
-      | where TimeGenerated > ago(24h)
+      | where TimeGenerated > ago(15m)
       | order by TimeGenerated desc`,
       timeRange(24)
     );
