@@ -44,7 +44,7 @@ export function FixedApps({ items, onRefix }) {
         <div className="relative flex-1 max-w-xs">
           <IconSearch className="absolute left-2.5 top-2 w-3.5 h-3.5 text-ink-mute" />
           <input
-            className="w-full bg-raised border border-line rounded-lg pl-7 pr-3 py-1.5 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20"
+            className="w-full bg-raised border border-line rounded-md pl-7 pr-3 py-1.5 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20"
             placeholder="Filter by app or error type"
             value={q}
             onChange={e => setQ(e.target.value)}
@@ -56,7 +56,7 @@ export function FixedApps({ items, onRefix }) {
       </div>
 
       {/* Table */}
-      <div className="bg-raised border border-line rounded-lg overflow-hidden shadow-card">
+      <div className="bg-raised border border-line rounded-md overflow-hidden shadow-card">
         <div className="overflow-x-auto">
           {/* Header */}
           <div className="grid gap-3 items-center px-4 py-2.5 bg-canvas border-b border-line font-mono text-[10px] uppercase tracking-[0.08em] text-ink-mute"
@@ -74,7 +74,6 @@ export function FixedApps({ items, onRefix }) {
               >
                 <div>
                   <div className="font-semibold text-[14px]">{item.app}</div>
-                  <div className="font-mono text-[11px] text-ink-mute mt-0.5">{item.errorType}</div>
                 </div>
                 <div><EnvBadge env={item.env} /></div>
                 <div className="text-ink-soft">{item.summary}</div>
@@ -96,7 +95,7 @@ export function FixedApps({ items, onRefix }) {
                 </div>
                 <div>
                   <button
-                    className="inline-flex items-center gap-1.5 bg-raised border border-line px-2.5 py-1.5 rounded-lg text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
+                    className="inline-flex items-center gap-1.5 bg-raised border border-line px-2.5 py-1.5 rounded-md text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
                     onClick={() => onRefix(item)}
                   >
                     <IconRefresh className="w-3 h-3" />Fix again

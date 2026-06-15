@@ -28,18 +28,18 @@ export function VpsTab() {
     setTimeout(() => setSshCopied(false), 2000);
   };
 
-  const inputCls = 'w-full bg-canvas border border-line rounded-lg px-3 py-2 text-[13px] font-mono outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20';
+  const inputCls = 'w-full bg-canvas border border-line rounded-md px-3 py-2 text-[13px] font-mono outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20';
 
   return (
     <div className="space-y-4">
       {/* Server list */}
-      <div className="bg-raised border border-line rounded-lg p-5">
+      <div className="bg-raised border border-line rounded-md p-5">
         <h3 className="font-bold text-[14px] mb-1">VPS / Self-hosted servers</h3>
         <p className="text-[12px] text-ink-mute mb-5">Auro connects via SSH to tail logs and apply patches. Add each server's connection details.</p>
 
         <div className="space-y-2 mb-3">
           {servers.map(s => (
-            <div key={s.id} className="flex items-center gap-3 bg-canvas border border-line rounded-lg px-3.5 py-2.5">
+            <div key={s.id} className="flex items-center gap-3 bg-canvas border border-line rounded-md px-3.5 py-2.5">
               <IconServer className="w-4 h-4 text-ink-mute shrink-0" />
               <div className="flex-1 min-w-0">
                 <div className="font-mono text-[12px] font-semibold">{s.user}@{s.host}:{s.port}</div>
@@ -48,7 +48,7 @@ export function VpsTab() {
               <ConnBadge status={s.status} />
               <button
                 onClick={() => removeServer(s.id)}
-                className="p-1.5 rounded-lg text-ink-mute hover:text-coral-deep hover:bg-coral-soft transition-colors"
+                className="p-1.5 rounded-md text-ink-mute hover:text-coral-deep hover:bg-coral-soft transition-colors"
                 title="Remove server"
               >
                 <IconTrash className="w-3.5 h-3.5" />
@@ -58,7 +58,7 @@ export function VpsTab() {
         </div>
 
         {addMode ? (
-          <div className="border border-line rounded-lg p-4 bg-canvas space-y-3">
+          <div className="border border-line rounded-md p-4 bg-canvas space-y-3">
             <div className="font-semibold text-[13px]">Add server</div>
             <FieldRow>
               <Field label="Label">
@@ -77,14 +77,14 @@ export function VpsTab() {
               </Field>
             </FieldRow>
             <div className="flex gap-2 pt-1">
-              <button onClick={addServer} className="bg-teal-deep text-white px-3 py-1.5 rounded-lg text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors">Add server</button>
-              <button onClick={() => setAddMode(false)} className="bg-raised border border-line px-3 py-1.5 rounded-lg text-[13px] font-semibold text-ink-soft hover:bg-sunken transition-colors">Cancel</button>
+              <button onClick={addServer} className="bg-teal-deep text-white px-3 py-1.5 rounded-md text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors">Add server</button>
+              <button onClick={() => setAddMode(false)} className="bg-raised border border-line px-3 py-1.5 rounded-md text-[13px] font-semibold text-ink-soft hover:bg-sunken transition-colors">Cancel</button>
             </div>
           </div>
         ) : (
           <button
             onClick={() => setAddMode(true)}
-            className="w-full flex items-center justify-center gap-2 border border-dashed border-line rounded-lg py-2.5 text-[13px] text-ink-mute hover:bg-sunken hover:text-ink hover:border-ink-faint transition-colors"
+            className="w-full flex items-center justify-center gap-2 border border-dashed border-line rounded-md py-2.5 text-[13px] text-ink-mute hover:bg-sunken hover:text-ink hover:border-ink-faint transition-colors"
           >
             <IconPlus className="w-3.5 h-3.5" />Add server
           </button>
@@ -92,16 +92,16 @@ export function VpsTab() {
       </div>
 
       {/* SSH key */}
-      <div className="bg-raised border border-line rounded-lg p-5">
+      <div className="bg-raised border border-line rounded-md p-5">
         <h3 className="font-bold text-[14px] mb-1">SSH public key</h3>
         <p className="text-[12px] text-ink-mute mb-4">Add this key to <code className="bg-sunken px-1 rounded font-mono text-[11px]">~/.ssh/authorized_keys</code> on each server. The private key stays in the secure vault.</p>
-        <div className="bg-[#0e1210] rounded-lg p-4 font-mono text-[11px] border border-[#1e2620]">
+        <div className="bg-[#0e1210] rounded-md p-4 font-mono text-[11px] border border-[#1e2620]">
           <div className="text-[#4a6a58] mb-1">/* add to ~/.ssh/authorized_keys */</div>
           <div className="text-[#7a9a88]">ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHb8Q9v2... auro-heal@ai2dev</div>
         </div>
         <button
           onClick={copyKey}
-          className="mt-3 bg-raised border border-line px-3 py-1.5 rounded-lg text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
+          className="mt-3 bg-raised border border-line px-3 py-1.5 rounded-md text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
         >
           {sshCopied ? '✓ Copied' : 'Copy public key'}
         </button>

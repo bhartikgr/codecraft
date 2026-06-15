@@ -37,7 +37,7 @@ export function ActionsBar({ status, testing, saved, onTest, onSave }) {
       <button
         onClick={onTest}
         disabled={testing}
-        className="inline-flex items-center gap-2 bg-raised border border-line px-3 py-1.5 rounded-lg text-[13px] font-semibold text-ink-soft hover:bg-sunken disabled:opacity-50 transition-colors"
+        className="inline-flex items-center gap-2 bg-raised border border-line px-3 py-1.5 rounded-md text-[13px] font-semibold text-ink-soft hover:bg-sunken disabled:opacity-50 transition-colors"
       >
         {testing ? (
           <><span className="w-3 h-3 rounded-full border-2 border-teal-deep border-t-transparent animate-spin" />Testing…</>
@@ -45,7 +45,7 @@ export function ActionsBar({ status, testing, saved, onTest, onSave }) {
       </button>
       <button
         onClick={onSave}
-        className="inline-flex items-center gap-2 bg-teal-deep text-white px-3 py-1.5 rounded-lg text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors"
+        className="inline-flex items-center gap-2 bg-teal-deep text-white px-3 py-1.5 rounded-md text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors"
       >
         {saved ? '✓ Saved' : 'Save changes'}
       </button>
@@ -54,5 +54,5 @@ export function ActionsBar({ status, testing, saved, onTest, onSave }) {
 }
 
 /* Shared input class — add to global CSS or use inline */
-export const INPUT_CLS = 'w-full bg-raised border border-line rounded-lg px-3 py-2 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20 transition';
+export const INPUT_CLS = 'w-full bg-raised border border-line rounded-md px-3 py-2 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20 transition';
 export const INPUT_MONO = INPUT_CLS + ' font-mono text-[12px]';

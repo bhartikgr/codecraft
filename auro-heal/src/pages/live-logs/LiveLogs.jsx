@@ -8,10 +8,13 @@ const LEVEL_STYLE = {
   DEBUG: { text: "text-ink-mute", bg: "bg-sunken", border: "border-line" },
 };
 
+const LOGS_PER_APP = 200;
+
 export function LiveLogs() {
   const [logs, setLogs] = useState([]);
   const [paused, setPaused] = useState(false);
   const [envFilter, setEnvFilter] = useState("all");
+  const [appFilter, setAppFilter] = useState("all");
   const [lvlFilter, setLvlFilter] = useState("all");
   const [search, setSearch] = useState("");
   const bottomRef = useRef(null);
@@ -19,108 +22,119 @@ export function LiveLogs() {
   const intervalRef = useRef(null);
   const isMountedRef = useRef(true);
   const [loading, setLoading] = useState(true);
-  // Define fetchLogs as a useCallback to avoid recreating it
+
   const fetchLogs = useCallback(async () => {
     try {
       const res = await fetch(
         `${import.meta.env.VITE_API_LINK}/api/logs/recent`,
         {
-          method: 'GET',
+          method: "GET",
           headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': import.meta.env.VITE_API_KEY,
+            "Content-Type": "application/json",
+            "x-api-key": import.meta.env.VITE_API_KEY,
           },
         }
-      )
+      );
 
-      const data = await res.json()
+      const data = await res.json();
 
-      if (!isMountedRef.current) return
+      if (!isMountedRef.current) return;
 
-      setLoading(false)
+      setLoading(false);
 
       if (Array.isArray(data.logs)) {
         setLogs((prev) => {
           const seen = new Set(
             prev.map((l) => `${l.env}-${l.app}-${l.level}-${l.msg}`)
-          )
+          );
 
           const newLogs = data.logs.filter((l) => {
-            const key = `${l.env}-${l.app}-${l.level}-${l.msg}`
-            if (seen.has(key)) return false
-            seen.add(key)
-            return true
-          })
+            const key = `${l.env}-${l.app}-${l.level}-${l.msg}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
 
-          return [...newLogs, ...prev].slice(0, 500)
-        })
+          // Keep at most 2000 raw logs in memory across all apps
+          return [...prev, ...newLogs].slice(-2000);
+        });
       }
-
     } catch (err) {
-      console.error("Log fetch error", err)
-      setLoading(false)
+      console.error("Log fetch error", err);
+      setLoading(false);
     }
-  }, [])
+  }, []);
 
-  // Set up polling as a separate effect
   useEffect(() => {
-    // Mark component as mounted
     isMountedRef.current = true;
-
     let initialFetchTimeout = null;
 
-    // Don't start polling if paused
     if (!paused) {
       initialFetchTimeout = setTimeout(() => {
-        if (isMountedRef.current) {
-          fetchLogs();
-        }
+        if (isMountedRef.current) fetchLogs();
       }, 0);
 
-      // Set up interval
       intervalRef.current = setInterval(fetchLogs, 10000);
     }
 
-    // Cleanup function
     return () => {
-      if (initialFetchTimeout) {
-        clearTimeout(initialFetchTimeout);
-      }
+      if (initialFetchTimeout) clearTimeout(initialFetchTimeout);
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
     };
-  }, [paused, fetchLogs]); // Re-run when paused changes
+  }, [paused, fetchLogs]);
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       isMountedRef.current = false;
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-      }
+      if (intervalRef.current) clearInterval(intervalRef.current);
     };
   }, []);
 
-  // Auto-scroll behaviour
+  // Reset scroll to bottom whenever the app selection changes
+  useEffect(() => {
+    if (bottomRef.current) {
+      bottomRef.current.scrollIntoView({ behavior: "auto" });
+    }
+  }, [appFilter]);
+
   useEffect(() => {
     if (autoScroll && bottomRef.current) {
       bottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [logs, autoScroll]);
 
-  const visible = logs.filter((l) => {
-    if (envFilter !== "all" && l.env !== envFilter) return false;
-    if (lvlFilter !== "all" && l.level !== lvlFilter) return false;
-    if (
-      search &&
-      !l.msg.toLowerCase().includes(search.toLowerCase()) &&
-      !l.app.toLowerCase().includes(search.toLowerCase())
-    )
-      return false;
-    return true;
-  });
+  // Derive unique app names only from logs that match the current env filter
+  // so switching to AWS only shows AWS apps, not Azure/GCP apps
+  const appNames = [
+    "all",
+    ...Array.from(
+      new Set(
+        logs
+          .filter((l) => envFilter === "all" || l.env === envFilter)
+          .map((l) => l.app)
+      )
+    ).sort(),
+  ];
+
+  // Filter → sort latest-first → cap at LOGS_PER_APP for the selected app
+  const visible = logs
+    .filter((l) => {
+      if (envFilter !== "all" && l.env !== envFilter) return false;
+      if (appFilter !== "all" && l.app !== appFilter) return false;
+      if (lvlFilter !== "all" && l.level !== lvlFilter) return false;
+      if (
+        search &&
+        !l.msg.toLowerCase().includes(search.toLowerCase()) &&
+        !l.app.toLowerCase().includes(search.toLowerCase())
+      )
+        return false;
+      return true;
+    })
+    .sort((a, b) => new Date(b.ts) - new Date(a.ts))
+    .slice(0, LOGS_PER_APP);
 
   const envs = ["all", "aws", "azure", "gcp", "vps"];
   const levels = ["all", "ERROR", "WARN", "INFO", "DEBUG"];
@@ -143,16 +157,20 @@ export function LiveLogs() {
         </div>
         <div className="flex items-center gap-3">
           <span
-            className={`flex items-center gap-1.5 font-mono text-[11px] px-3 py-1.5 rounded-full ${paused ? "bg-amber-soft text-amber-deep" : "bg-teal-soft text-teal-deep"}`}
+            className={`flex items-center gap-1.5 font-mono text-[11px] px-3 py-1.5 rounded-full ${paused
+                ? "bg-amber-soft text-amber-deep"
+                : "bg-teal-soft text-teal-deep"
+              }`}
           >
             <span
-              className={`w-1.5 h-1.5 rounded-full ${paused ? "bg-amber" : "bg-teal animate-pulse2"}`}
+              className={`w-1.5 h-1.5 rounded-full ${paused ? "bg-amber" : "bg-teal animate-pulse2"
+                }`}
             />
             {paused ? "Paused" : "Live"}
           </span>
           <button
             onClick={() => setPaused((p) => !p)}
-            className="bg-raised border border-line px-3 py-1.5 rounded-lg text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
+            className="bg-raised border border-line px-3 py-1.5 rounded-md text-xs font-semibold text-ink-soft hover:bg-sunken transition-colors"
           >
             {paused ? "▶ Resume" : "⏸ Pause"}
           </button>
@@ -162,15 +180,20 @@ export function LiveLogs() {
       {/* Filters */}
       <div className="flex items-center gap-3 mb-4 flex-wrap">
         <input
-          className="bg-raised border border-line rounded-lg px-3 py-1.5 text-[13px] outline-none focus:border-teal-deep w-48"
+          className="bg-raised border border-line rounded-md px-3 py-1.5 text-[13px] outline-none focus:border-teal-deep w-48"
           placeholder="Search logs…"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
+
+        {/* Env filter */}
         <select
-          className="bg-raised border border-line rounded-lg px-2.5 py-1.5 text-[13px] outline-none focus:border-teal-deep"
+          className="bg-raised border border-line rounded-md px-2.5 py-1.5 text-[13px] outline-none focus:border-teal-deep"
           value={envFilter}
-          onChange={(e) => setEnvFilter(e.target.value)}
+          onChange={(e) => {
+            setEnvFilter(e.target.value);
+            setAppFilter("all"); // reset app when env changes
+          }}
         >
           {envs.map((e) => (
             <option key={e} value={e}>
@@ -178,8 +201,23 @@ export function LiveLogs() {
             </option>
           ))}
         </select>
+
+        {/* App filter — sits right beside env */}
         <select
-          className="bg-raised border border-line rounded-lg px-2.5 py-1.5 text-[13px] outline-none focus:border-teal-deep"
+          className="bg-raised border border-line rounded-md px-2.5 py-1.5 text-[13px] outline-none focus:border-teal-deep"
+          value={appFilter}
+          onChange={(e) => setAppFilter(e.target.value)}
+        >
+          {appNames.map((a) => (
+            <option key={a} value={a}>
+              {a === "all" ? "All apps" : a}
+            </option>
+          ))}
+        </select>
+
+        {/* Level filter */}
+        <select
+          className="bg-raised border border-line rounded-md px-2.5 py-1.5 text-[13px] outline-none focus:border-teal-deep"
           value={lvlFilter}
           onChange={(e) => setLvlFilter(e.target.value)}
         >
@@ -189,6 +227,7 @@ export function LiveLogs() {
             </option>
           ))}
         </select>
+
         <label className="ml-auto flex items-center gap-2 text-xs text-ink-soft cursor-pointer select-none">
           <input
             type="checkbox"
@@ -202,9 +241,10 @@ export function LiveLogs() {
 
       {/* Log stream */}
       <div
-        className="flex-1 bg-[#0e1210] rounded-lg border border-[#1e2620] overflow-hidden flex flex-col"
+        className="flex-1 bg-[#0e1210] rounded-md border border-[#1e2620] overflow-hidden flex flex-col"
         style={{ minHeight: 400 }}
       >
+        {/* Terminal chrome bar */}
         <div className="flex items-center gap-2 px-4 py-2 border-b border-[#1e2620] bg-[#141812]">
           <div className="flex gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-[#2d3630]" />
@@ -212,12 +252,29 @@ export function LiveLogs() {
             <span className="w-2.5 h-2.5 rounded-full bg-[#2d3630]" />
           </div>
           <span className="font-mono text-[11px] text-[#5a6b62] ml-2">
-            auro-heal · log stream · {visible.length} lines
+            auro-heal · log stream ·{" "}
+            {appFilter !== "all" ? (
+              <span className="text-teal-deep">{appFilter}</span>
+            ) : (
+              "all apps"
+            )}{" "}
+            · {visible.length}
+            {visible.length === LOGS_PER_APP ? `/${LOGS_PER_APP}` : ""} lines
           </span>
           <span className="ml-auto font-mono text-[11px] text-[#3a4d42]">
             {new Date().toLocaleTimeString()}
           </span>
         </div>
+
+        {/* At-cap notice */}
+        {visible.length === LOGS_PER_APP && (
+          <div className="px-4 py-1.5 bg-[#1a2018] border-b border-[#1e2620] font-mono text-[11px] text-amber flex items-center gap-2">
+            <span className="opacity-60">⚠</span>
+            Showing the {LOGS_PER_APP} most recent lines. Use filters or search
+            to narrow results.
+          </div>
+        )}
+
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="overflow-y-auto p-4 space-y-1 scrollbar-thin h-[80vh]">
             {loading && (
@@ -252,9 +309,15 @@ export function LiveLogs() {
                       {log.level}
                     </span>
                     <EnvBadge env={log.env} />
-                    <span className="text-[#7a9688] shrink-0">{log.app}</span>
+                    {/* Only show app column when viewing all apps */}
+                    {appFilter === "all" && (
+                      <span className="text-[#7a9688] shrink-0">{log.app}</span>
+                    )}
                     <span
-                      className={`flex-1 ${st.text !== "text-ink-mute" ? st.text : "text-[#adc4b8]"}`}
+                      className={`flex-1 ${st.text !== "text-ink-mute"
+                          ? st.text
+                          : "text-[#adc4b8]"
+                        }`}
                     >
                       {log.msg}
                     </span>

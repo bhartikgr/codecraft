@@ -137,16 +137,7 @@ async function detectVersionWithAI(cloneDir, language, callAI, devLog) {
 
   const systemPrompt = `You are a build-environment detector.
 Given project config files, extract the EXACT runtime version required.
-Reply with ONLY a JSON object — no markdown, no explanation:
-{"version": "<major.minor>" | "<major>" | null, "source": "<filename that told you>"}
-
-Rules:
-- For Python: return major.minor e.g. "3.12"
-- For Node.js: return major only e.g. "20"  
-- For Java: return major only e.g. "21"
-- For C#/.NET: return major.minor e.g. "8.0"
-- If multiple versions are listed (e.g. CI matrix), return the FIRST / lowest supported one
-- If you cannot determine a version with confidence, return null`
+Reply with ONLY a JSON object — no markdown, no explanation`
 
   const userPrompt = `Language: ${language}\n\nProject files:\n${hints}`
 

@@ -102,12 +102,12 @@ async function runFixPipeline({
 
       await status('preparing')
 
-      jsonToFolder(fixedJson, paths.workDir)
+      jsonToFolder(fixedJson, paths.fixDir)
 
       await uiLog(`Build checking (attempt ${attempt})…`)
 
       buildResult = await runBuildScript({
-        projectPath: paths.workDir,
+        projectPath: paths.fixDir,
         language,
         framework: version,
         projectName,

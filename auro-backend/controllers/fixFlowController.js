@@ -3,6 +3,7 @@ const { v4: uuidv4 } = require('uuid');
 const { runFixPipeline } = require('../core/fixPipeline');
 const path = require('path')
 const { commitProjectRepository } = require('../core/git/gitCommit')
+const { getPaths } = require('./utils/paths')
 const fixJobs = new Map();
 
 exports.startFix = async (req, res) => {
@@ -82,6 +83,9 @@ exports.commitFix = async (req, res) => {
   try {
     const { repoUrl, branch, projectName, message, mainbranch } = req.body
 
+    const repoName = repoUrl.split('/').pop().replace(/\.git$/, '')
+    const paths = getPaths(projectName, repoName, branch)
+
     if (!repoUrl || !branch || !projectName || !message || !mainbranch) {
       return res.status(400).json({
         success: false,
@@ -89,15 +93,8 @@ exports.commitFix = async (req, res) => {
       })
     }
 
-    const repoName = repoUrl.split('/').pop().replace(/\.git$/, '')
-
-    const slug = `${repoName}-${mainbranch}`
-    const root = path.join(BASE, projectName, slug)
-
-    const cloneDir = path.join(root, 'generatedRepos')
-
     await commitProjectRepository({
-      repoPath: cloneDir,
+      repoPath: paths.fixDir,
       branchName: branch,
       user: 'dorthyuser',
       message: message,

@@ -1,15 +1,15 @@
 const SEV_CLASSES = {
   critical: 'bg-coral-soft text-coral-deep border-coral/30',
-  high:     'bg-coral-soft text-coral-deep border-coral/20',
-  medium:   'bg-amber-soft text-amber-deep border-amber/25',
-  low:      'bg-sunken text-ink-soft border-line',
+  high: 'bg-coral-soft text-coral-deep border-coral/20',
+  medium: 'bg-amber-soft text-amber-deep border-amber/25',
+  low: 'bg-sunken text-ink-soft border-line',
 };
 
 const ENV_CLASSES = {
-  aws:   'bg-[#fdf6e3] text-[#7a5c10]',
-  azure: 'bg-[#eef2fc] text-[#2a3e9a]',
-  gcp:   'bg-[#e8f5ee] text-[#1a6640]',
-  vps:   'bg-sunken text-ink-soft',
+  aws: "bg-gradient-to-r from-[#ff7b23] to-[#ff9d5c] text-white",
+  azure: "bg-gradient-to-r from-[#2a5ec4] to-[#5f8ee8] text-white",
+  gcp: "bg-gradient-to-r from-[#1e8c4a] to-[#3dbb6b] text-white",
+  vps: "bg-gradient-to-r from-[#5a3c9a] to-[#8b6dd1] text-white",
 };
 
 export function SevBadge({ sev }) {

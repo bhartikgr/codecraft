@@ -62,14 +62,14 @@ function AlertRow ({ app, onFix, onDismiss }) {
       {/* actions */}
       <div className='flex items-center gap-1.5 shrink-0'>
         <button
-          className='inline-flex items-center gap-1.5 bg-teal-deep text-white px-2.5 py-1.5 rounded-lg text-xs font-semibold hover:bg-teal-deep/90 transition-colors'
+          className='inline-flex items-center gap-1.5 bg-teal-deep text-white px-2.5 py-1.5 rounded-md text-xs font-semibold hover:bg-teal-deep/90 transition-colors'
           onClick={() => onFix(app)}
         >
           <IconSpark className='w-3 h-3' />
           Fix now
         </button>
         <button
-          className='inline-flex items-center px-2.5 py-1.5 rounded-lg text-xs font-semibold bg-raised border border-line text-ink-soft hover:bg-sunken transition-colors'
+          className='inline-flex items-center px-2.5 py-1.5 rounded-md text-xs font-semibold bg-raised border border-line text-ink-soft hover:bg-sunken transition-colors'
           onClick={() => onDismiss(app.id)}
         >
           Dismiss
@@ -151,7 +151,7 @@ export function Alerts ({ errorApps, dismissed, onFix, onDismiss }) {
         {['critical', 'high', 'medium', 'low'].map(sev => (
           <div
             key={sev}
-            className={`bg-raised border border-line rounded-lg p-3.5 ${SUMMARY_CLASSES[sev].bg}`}
+            className={`bg-raised border border-line rounded-md p-3.5 ${SUMMARY_CLASSES[sev].bg}`}
           >
             <div
               className={`font-mono text-[22px] font-bold ${SUMMARY_CLASSES[sev].val}`}
@@ -190,7 +190,7 @@ export function Alerts ({ errorApps, dismissed, onFix, onDismiss }) {
       </div>
 
       {/* Alert list */}
-      <div className='bg-raised border border-line rounded-lg overflow-hidden shadow-card'>
+      <div className=' rounded-md overflow-hidden shadow-card flex flex-col gap-4'>
         {filtered.map(a => (
           <AlertRow key={a.id} app={a} onFix={onFix} onDismiss={onDismiss} />
         ))}

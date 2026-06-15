@@ -12,10 +12,10 @@ export function GcpTab() {
   const testConn = () => { setTesting(true); setStatus('testing'); setTimeout(() => { setTesting(false); setStatus('connected'); }, 1800); };
   const save     = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
-  const inputCls = 'w-full bg-canvas border border-line rounded-lg px-3 py-2 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20';
+  const inputCls = 'w-full bg-canvas border border-line rounded-md px-3 py-2 text-[13px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20';
 
   return (
-    <div className="bg-raised border border-line rounded-lg p-5">
+    <div className="bg-raised border border-line rounded-md p-5">
       <h3 className="font-bold text-[14px] mb-1">GCP service account</h3>
       <p className="text-[12px] text-ink-mute mb-5">Service account with <code className="bg-sunken px-1 rounded font-mono text-[11px]">roles/logging.viewer</code> and <code className="bg-sunken px-1 rounded font-mono text-[11px]">roles/monitoring.viewer</code>.</p>
 

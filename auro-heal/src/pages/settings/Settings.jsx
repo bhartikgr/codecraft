@@ -27,7 +27,7 @@ export function Settings() {
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`px-3.5 py-1.5 rounded-lg text-[13px] font-semibold transition-colors ${
+            className={`px-3.5 py-1.5 rounded-md text-[13px] font-semibold transition-colors ${
               tab === t.id
                 ? 'bg-raised border border-line text-ink shadow-sm'
                 : 'text-ink-mute hover:text-ink hover:bg-raised/60'

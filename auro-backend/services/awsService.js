@@ -57,6 +57,32 @@ function detectErrors(events = []) {
     }))
 }
 
+
+function detectAwsType(logGroupName = "") {
+  const name = logGroupName.toLowerCase();
+
+  if (name.includes("/aws/lambda/")) {
+    return "lambda";
+  }
+
+  if (
+    name.includes("api-gateway") ||
+    name.includes("apigateway")
+  ) {
+    return "api";
+  }
+
+  if (name.includes("/ecs/")) {
+    return "ecs";
+  }
+
+  if (name.includes("/eks/")) {
+    return "eks";
+  }
+
+  return "unknown";
+}
+
 function detectRuntime(logGroupName = '', logs = []) {
   const combined = `${logGroupName} ${logs
     .map(l => l.message || '')
@@ -146,6 +172,7 @@ async function getAllAppsLogs() {
             id: logGroupName,
             name: logGroupName.split('/').pop(),
             env: 'aws',
+            type: detectAwsType(logGroupName),
             lang: detectRuntime(logGroupName, logs),
             severity:
               errors.length === 0
@@ -184,7 +211,7 @@ async function getAllAppsLogs() {
           appErrors
         };
       } catch (err) {
-        
+
         return null;
       }
     });

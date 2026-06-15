@@ -11,7 +11,7 @@ import { IconMenu, IconBell, IconRefresh } from './components/Icons.jsx'
 
 const PAGES = ['dashboard', 'alerts', 'fixed', 'live-logs', 'settings']
 
-export default function App () {
+export default function App() {
   const [page, setPage] = useState('dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [tweaksOpen, setTweaksOpen] = useState(false)
@@ -63,7 +63,7 @@ export default function App () {
         <header className='lg:hidden sticky top-0 z-20 flex items-center gap-3 bg-raised/90 backdrop-blur border-b border-line px-4 h-14 shrink-0'>
           <button
             onClick={() => setSidebarOpen(true)}
-            className='p-2 -ml-1 rounded-lg text-ink-mute hover:text-ink hover:bg-sunken transition-colors'
+            className='p-2 -ml-1 rounded-md text-ink-mute hover:text-ink hover:bg-sunken transition-colors'
           >
             <IconMenu className='w-5 h-5' />
           </button>
@@ -73,7 +73,7 @@ export default function App () {
           {activeAlerts.length > 0 && (
             <button
               onClick={() => navigate('alerts')}
-              className='relative p-2 rounded-lg text-ink-mute hover:text-ink hover:bg-sunken transition-colors'
+              className='relative p-2 rounded-md text-ink-mute hover:text-ink hover:bg-sunken transition-colors'
             >
               <IconBell className='w-5 h-5' />
               <span className='absolute top-1 right-1 w-4 h-4 rounded-full bg-coral text-white font-mono text-[9px] flex items-center justify-center font-bold'>
@@ -112,6 +112,7 @@ export default function App () {
 
       {/* FixFlow modal */}
       <FixFlow
+        key={modalApp?.id}
         app={modalApp}
         onClose={() => setModalApp(null)}
         onFixed={app =>
@@ -157,11 +158,10 @@ export default function App () {
                         navigate(p)
                         setTweaksOpen(false)
                       }}
-                      className={`w-full text-left px-3 py-1.5 rounded-lg transition-colors ${
-                        page === p
+                      className={`w-full text-left px-3 py-1.5 rounded-md transition-colors ${page === p
                           ? 'bg-teal-soft text-teal-deep font-semibold'
                           : 'hover:bg-sunken text-ink-soft'
-                      }`}
+                        }`}
                     >
                       {p}
                     </button>
@@ -175,11 +175,10 @@ export default function App () {
                     <button
                       key={String(e)}
                       onClick={() => setEnvEmphasis(e)}
-                      className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${
-                        envEmphasis === e
+                      className={`px-2.5 py-1 rounded-md text-[11px] font-mono border transition-colors ${envEmphasis === e
                           ? 'bg-teal-soft border-teal text-teal-deep'
                           : 'border-line text-ink-mute hover:bg-sunken'
-                      }`}
+                        }`}
                     >
                       {e ?? 'none'}
                     </button>
@@ -193,7 +192,7 @@ export default function App () {
                     reset()
                     setTweaksOpen(false)
                   }}
-                  className='flex items-center gap-2 px-3 py-1.5 rounded-lg border border-line text-ink-soft hover:bg-sunken transition-colors'
+                  className='flex items-center gap-2 px-3 py-1.5 rounded-md border border-line text-ink-soft hover:bg-sunken transition-colors'
                 >
                   <IconRefresh className='w-3.5 h-3.5' />
                   Reset seed data

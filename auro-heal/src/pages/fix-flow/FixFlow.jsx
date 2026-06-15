@@ -18,6 +18,7 @@ import {
 
 
 export function FixFlow({ app, onClose, onFixed }) {
+
   const [stage, setStage] = useState("review");
   const [currentStatus, setCurrentStatus] = useState("analyzing");
 
@@ -41,9 +42,15 @@ export function FixFlow({ app, onClose, onFixed }) {
 
 
   const startFix = async () => {
+    setFixError(null);
+
+    if (!appRepo.trim() || !appBranch.trim()) {
+      setFixError("Repository URL and branch name are required.");
+      return;
+    }
+
     try {
       setBusy(true);
-      setFixError(null);
       setStage("fixing");
       setCurrentStatus("analyzing");
       setMainBranch(appBranch);
@@ -81,7 +88,7 @@ export function FixFlow({ app, onClose, onFixed }) {
         return;
       }
 
-      const res = await commitFixFlow({
+      await commitFixFlow({
         appId: app.id,
         projectName: app.name,
         repoUrl: appRepo,
@@ -90,7 +97,6 @@ export function FixFlow({ app, onClose, onFixed }) {
         message: msg,
       });
 
-      console.log("commit response", res);
       setBusy(false);
       setStage("committed");
       setSucccessMsg("Patch committed successfully!");
@@ -144,18 +150,30 @@ export function FixFlow({ app, onClose, onFixed }) {
       {/* Sheet */}
       <div className="relative bg-raised border border-line rounded-t-2xl sm:rounded-2xl shadow-2xl w-full sm:max-w-xl max-h-[92dvh] flex flex-col animate-slidein overflow-hidden">
         {fixError && (
-          <div className="bg-coral-soft border border-coral/30 rounded-lg px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
+          <div className="bg-coral-soft border border-coral/30 rounded-md px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
             ⚠ {fixError}
           </div>
         )}
         {succcessMsg && (
-          <div className="bg-coral-soft border border-coral/30 rounded-lg px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
-            {succcessMsg}
+          <div className="flex items-center gap-2 bg-green-800/10 border border-green-800/20 rounded-md px-3.5 py-3 text-[12px] font-mono text-green-800">
+            <svg
+              className="w-5 h-5 shrink-0"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                clipRule="evenodd"
+              />
+            </svg>
+
+            <span>{succcessMsg}</span>
           </div>
         )}
         {/* Header */}
         <div className="flex items-center gap-3 px-5 py-4 border-b border-line shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-teal-soft flex items-center justify-center shrink-0">
+          <div className="w-8 h-8 rounded-md bg-teal-soft flex items-center justify-center shrink-0">
             <IconSpark className="w-4 h-4 text-teal-deep" />
           </div>
           <div className="flex-1 min-w-0">
@@ -166,7 +184,7 @@ export function FixFlow({ app, onClose, onFixed }) {
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 rounded-lg text-ink-mute hover:text-ink hover:bg-sunken transition-colors"
+            className="p-1.5 rounded-md text-ink-mute hover:text-ink hover:bg-sunken transition-colors"
           >
             <IconClose className="w-4 h-4" />
           </button>
@@ -180,7 +198,7 @@ export function FixFlow({ app, onClose, onFixed }) {
             <EnvBadge env={app.env} />
           </div>
 
-          <div className="bg-coral-soft border border-coral/30 rounded-lg px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
+          <div className="bg-coral-soft border border-coral/30 rounded-md px-3.5 py-2.5 text-[12px] text-coral-deep font-mono">
             {app.error}
           </div>
 
@@ -189,12 +207,12 @@ export function FixFlow({ app, onClose, onFixed }) {
               <div className="text-[12px] text-ink-mute">
                 Auro will apply an AI-generated patch, open a pull request, and watch for regressions.
               </div>
-              <div className="bg-sunken rounded-lg divide-y divide-line text-[12px]">
+              <div className="bg-sunken rounded-md divide-y divide-line text-[12px]">
                 {app.logs?.slice(0, 4).map((l, i) => (
                   <div key={i} className="px-3.5 py-2 font-mono text-ink-mute flex gap-3">
                     {typeof l !== "string" && (
-                      <span className="text-[#4a6a58] shrink-0 text-[10px]" style={{ wordBreak: "break-all" }}>
-                        {new Date(l.timestamp).toLocaleTimeString()}
+                      <span className="text-[#4a6a58] shrink-0 text-[10px]">
+                        {new Date(l.timestamp).toISOString()}
                       </span>
                     )}
                     <span style={{ wordBreak: "break-all" }}>
@@ -219,13 +237,14 @@ export function FixFlow({ app, onClose, onFixed }) {
                   Git Repository URL
                 </label>
 
-                <div className="bg-canvas border border-line rounded-lg px-3 py-2">
+                <div className="bg-canvas border border-line rounded-md px-3 py-2">
                   <input
                     type="text"
                     value={appRepo}
                     onChange={(e) => setRepoUrl(e.target.value)}
                     placeholder="https://github.com/user/repo"
                     className="w-full bg-transparent outline-none text-[13px] font-mono"
+                    required
                   />
                 </div>
               </div>
@@ -236,7 +255,7 @@ export function FixFlow({ app, onClose, onFixed }) {
                   Branch Name
                 </label>
 
-                <div className="flex items-center gap-2 bg-canvas border border-line rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 bg-canvas border border-line rounded-md px-3 py-2">
                   <IconBranch className="w-3.5 h-3.5 text-ink-mute shrink-0" />
 
                   <input
@@ -244,6 +263,7 @@ export function FixFlow({ app, onClose, onFixed }) {
                     value={appBranch}
                     onChange={(e) => setBranch(e.target.value)}
                     className="flex-1 bg-transparent outline-none text-[13px] font-mono"
+                    required
                   />
                 </div>
               </div>
@@ -264,6 +284,7 @@ export function FixFlow({ app, onClose, onFixed }) {
 `}
                     rows={3}
                     className="w-full resize-none bg-transparent outline-none text-[13px] leading-6 font-mono placeholder:text-ink-mute"
+                    required
                   />
                 </div>
 
@@ -309,7 +330,7 @@ export function FixFlow({ app, onClose, onFixed }) {
           {(stage === "commit" || stage === "committed") && (
             <div className="space-y-3">
               {stage === "committed" && (
-                <div className="flex items-center gap-3 bg-teal-soft border border-teal/30 rounded-lg px-4 py-3">
+                <div className="flex items-center gap-3 bg-teal-soft border border-teal/30 rounded-md px-4 py-3">
                   <div className="w-7 h-7 rounded-full bg-teal flex items-center justify-center shrink-0">
                     <IconCheck className="w-3.5 h-3.5 text-white" />
                   </div>
@@ -326,7 +347,7 @@ export function FixFlow({ app, onClose, onFixed }) {
                 <label className="block font-mono text-[10px] uppercase tracking-widest text-ink-mute">
                   Commit to branch
                 </label>
-                <div className="flex items-center gap-2 bg-canvas border border-line rounded-lg px-3 py-2">
+                <div className="flex items-center gap-2 bg-canvas border border-line rounded-md px-3 py-2">
                   <IconBranch className="w-3.5 h-3.5 text-ink-mute shrink-0" />
                   <input
                     className="flex-1 bg-transparent font-mono text-[12px] outline-none"
@@ -342,7 +363,7 @@ export function FixFlow({ app, onClose, onFixed }) {
                   Commit message
                 </label>
                 <textarea
-                  className="w-full bg-canvas border border-line rounded-lg px-3 py-2 font-mono text-[12px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20 resize-none"
+                  className="w-full bg-canvas border border-line rounded-md px-3 py-2 font-mono text-[12px] outline-none focus:border-teal-deep focus:ring-2 focus:ring-teal/20 resize-none"
                   rows={2}
                   value={msg}
                   onChange={(e) => setMsg(e.target.value)}
@@ -357,7 +378,7 @@ export function FixFlow({ app, onClose, onFixed }) {
         <div className="shrink-0 flex items-center justify-end gap-2 px-5 py-4 border-t border-line bg-raised">
           {stage === "review" && (
             <>
-              <button onClick={onClose} className="px-3.5 py-2 rounded-lg border border-line text-[13px] font-semibold text-ink-soft hover:bg-sunken transition-colors">
+              <button onClick={onClose} className="px-3.5 py-2 rounded-md border border-line text-[13px] font-semibold text-ink-soft hover:bg-sunken transition-colors">
                 Cancel
               </button>
               <button onClick={() => setStage("config")} className="px-4 py-2 rounded-full bg-teal-deep text-white text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors flex items-center gap-2">
@@ -378,7 +399,7 @@ export function FixFlow({ app, onClose, onFixed }) {
           )}
 
           {stage === "fixing" && (
-            <button disabled className="px-3.5 py-2 rounded-lg bg-teal-deep/60 text-white text-[13px] font-semibold flex items-center gap-2 cursor-not-allowed">
+            <button disabled className="px-3.5 py-2 rounded-md bg-teal-deep/60 text-white text-[13px] font-semibold flex items-center gap-2 cursor-not-allowed">
               <span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" />
               Fixing…
             </button>
@@ -400,7 +421,7 @@ export function FixFlow({ app, onClose, onFixed }) {
               <button onClick={() => setStage("success")} className="px-4 py-2 rounded-full border border-line text-[13px] font-semibold text-ink-soft hover:bg-sunken transition-colors">
                 Back
               </button>
-              <button onClick={commitFix} disabled={busy} className="px-3.5 py-2 rounded-lg bg-teal-deep text-white text-[13px] font-semibold hover:bg-teal-deep/90 disabled:opacity-60 transition-colors flex items-center gap-2">
+              <button onClick={commitFix} disabled={busy} className="px-3.5 py-2 rounded-md bg-teal-deep text-white text-[13px] font-semibold hover:bg-teal-deep/90 disabled:opacity-60 transition-colors flex items-center gap-2">
                 {busy ? (
                   <><span className="w-3 h-3 rounded-full border-2 border-white border-t-transparent animate-spin" /> Committing…</>
                 ) : (
@@ -411,7 +432,7 @@ export function FixFlow({ app, onClose, onFixed }) {
           )}
 
           {stage === "committed" && (
-            <button onClick={onClose} className="px-3.5 py-2 rounded-lg bg-teal-deep text-white text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors">
+            <button onClick={onClose} className="px-3.5 py-2 rounded-md bg-teal-deep text-white text-[13px] font-semibold hover:bg-teal-deep/90 transition-colors">
               Done
             </button>
           )}

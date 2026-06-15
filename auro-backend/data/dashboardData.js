@@ -1,33 +1,14 @@
 // server/data/dashboardData.js
 
 const { getAllAppsLogs } = require('../services/awsService')
+const { getAzureData } = require('../services/azureService')
 
-async function getDashboardData () {
+async function getDashboardData() {
 
   const aws = await getAllAppsLogs()
 
 
-  const azure = {
-    id: 'azure',
-
-    name: 'Azure',
-
-    kind: 'Public cloud',
-
-    region: 'eastus, westeurope',
-
-    instances: 31,
-
-    errors: 3,
-
-    health: 91,
-
-    status: 'healthy',
-
-    logs: [],
-
-    errorLogs: []
-  }
+  const azure = await getAzureData()
 
 
   const gcp = {

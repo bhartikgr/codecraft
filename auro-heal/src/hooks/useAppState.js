@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 
 import { getDashboard } from '../services/dashboardService'
 
-export function useAppState () {
+export function useAppState() {
   const [errorApps, setErrorApps] = useState([])
   const [fixedItems, setFixedItems] = useState([])
   const [environments, setEnvironments] = useState([])
@@ -14,7 +14,12 @@ export function useAppState () {
   const [modalApp, setModalApp] = useState(null)
 
   const [loading, setLoading] = useState(true)
-
+  const SEV_ORDER = {
+    critical: 0,
+    high: 1,
+    medium: 2,
+    low: 3
+  }
   // FETCH DATA
   useEffect(() => {
     const loadDashboard = async () => {
@@ -106,9 +111,13 @@ export function useAppState () {
   const envData = useMemo(() => {
     return environments.map(env => ({
       ...env,
-      errors: errorApps.filter(app => app.env === env.id).length
+      errors: errorApps.filter(
+        app =>
+          app.env === env.id &&
+          (app.occurrences || 0) > 0
+      ).length
     }))
-  }, [environments, errorApps])
+  }, [environments, errorApps]);
 
   return {
     loading,

@@ -14,8 +14,8 @@ function getPaths(projectName, repoName, branch) {
     root,
 
     // SINGLE WORKING FOLDER
-    workDir: path.join(root, 'generatedRepos'),
-
+    workDir: path.join(root, 'clone-code'),
+    fixDir: path.join(root, 'fix-code'),
     tempDir: path.join(root, 'temp'),
 
     logsDir: path.join(root, 'logs'),
