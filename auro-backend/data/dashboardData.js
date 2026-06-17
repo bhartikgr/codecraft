@@ -2,6 +2,7 @@
 
 const { getAllAppsLogs } = require('../services/awsService')
 const { getAzureData } = require('../services/azureService')
+const { getFixedApps } = require('../services/fixedAppService')
 
 async function getDashboardData() {
 
@@ -140,35 +141,7 @@ async function getDashboardData() {
     }
   ]
 
-  const fixed = [
-    {
-      id: 'fix-01',
-
-      app: 'billing-cron',
-
-      env: 'aws',
-
-      errorType: 'MemoryLeak',
-
-      summary: 'Patched dangling event listener',
-
-      filesChanged: 3,
-
-      additions: 41,
-
-      deletions: 18,
-
-      commit: 'a4f8c91',
-
-      branch: 'main',
-
-      repo: 'github.com/auro/billing-cron',
-
-      fixedAt: 'Today · 07:42',
-
-      duration: '1m 38s'
-    }
-  ]
+  const fixed = await getFixedApps()
 
 
   const fixSteps = [

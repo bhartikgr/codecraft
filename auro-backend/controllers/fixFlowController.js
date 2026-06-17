@@ -148,13 +148,15 @@ exports.commitFix = async (req, res) => {
     try {
       const insertQuery = `
     INSERT INTO \`fixed-app\`
-    (app, env, summary, diff, \`commit\`, \`fixed-date\`)
-    VALUES (?, ?, ?, ?, ?, NOW())
+    (app, env, git_repo, git_branch, summary, diff, \`commit\`, \`fixed-date\`)
+    VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
   `
 
       const values = [
         projectName,
         env,
+        repoUrl,
+        branch,
         summary,
         diff || '',
         message,
@@ -199,6 +201,8 @@ exports.fixedApp = async (req, res) => {
         id,
         app,
         env,
+        git_repo,
+        git_branch,
         summary,
         diff,
         \`commit\`,
@@ -238,20 +242,21 @@ exports.fixedApp = async (req, res) => {
         id: r.id,
         app: r.app,
         env: r.env,
+        repo: r.git_repo || "",
+        branch: r.git_branch || "main",
         summary: r.summary,
         commit: r.commit,
         fixedAt: r["fixed-date"]
-          ? new Date(r["fixed-date"]).toLocaleString('en-IN', {
-            year: 'numeric',
-            month: 'short',
-            day: '2-digit',
-            hour: '2-digit',
-            minute: '2-digit'
+          ? new Date(r["fixed-date"]).toLocaleString("en-IN", {
+            year: "numeric",
+            month: "short",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit"
           })
-          : '—',
+          : "—",
         additions,
         deletions,
-        branch: r.env || 'main',
         duration: "—"
       };
     });

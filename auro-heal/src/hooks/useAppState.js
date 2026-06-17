@@ -81,8 +81,9 @@ export function useAppState() {
     setModalApp(null)
   }
 
-  // RE-FIX
+  
   const handleRefix = item => {
+
     setModalApp({
       id: 'refix-' + item.id,
       name: item.app,
@@ -91,7 +92,9 @@ export function useAppState() {
       severity: 'medium',
       occurrences: 1,
       lastSeen: 'now',
-      errorType: item.errorType,
+      error: item.summary ?? '', 
+      errorType: item.summary ?? '',
+      summary: item.summary ?? '',
       repo: item.repo,
       branch: item.branch
     })

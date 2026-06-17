@@ -27,9 +27,7 @@ export function FixFlow({ app, onClose }) {
   const [mainBranch, setMainBranch] = useState("");
   const [instructions, setInstructions] = useState("");
   const [repoUrl, setRepoUrl] = useState(app?.repo ?? "");
-  const [branch, setBranch] = useState(
-    app?.name?.toLowerCase().replace(/\s+/g, "-") ?? ""
-  );
+  const [branch, setBranch] = useState(app?.branch ?? "");
   const [msg, setMsg] = useState(
     app ? `fix: resolve ${app.error} in ${app.name}` : ""
   );
@@ -149,7 +147,7 @@ export function FixFlow({ app, onClose }) {
     poll();
   };
 
-  const appBranch = branch || app.name?.toLowerCase().replace(/\s+/g, "-") || "fix-branch";
+  const appBranch = branch || app.branch || app.name?.toLowerCase().replace(/\s+/g, "-") || "fix-branch";
   const appRepo = repoUrl || app.repo || "";
 
   return (
