@@ -28,6 +28,7 @@
     "express-rate-limit": "^8.5.2",
     "fs-extra": "^11.3.5",
     "helmet": "^8.1.0",
+    "mysql2": "^3.22.5",
     "openai": "^6.38.0",
     "uuid": "^14.0.0"
   }

@@ -1,5 +1,3 @@
-// services/awsService.js
-
 const {
   CloudWatchLogsClient,
   DescribeLogGroupsCommand,
@@ -15,48 +13,65 @@ const credentials = {
   secretAccessKey: process.env.AWS_SECRET_KEY
 }
 
-// Number of errors to keep in memory for fast access (default 10)
 const ERRORS_IN_MEMORY = parseInt(process.env.ERRORS_IN_MEMORY, 10) || 10
-
-// ========================================
-// AWS CLIENT
-// ========================================
 
 const logsClient = new CloudWatchLogsClient({
   region,
   credentials
 })
 
-// ========================================
-// ERROR DETECTOR
-// ========================================
-
 function detectErrors(events = []) {
-  const patterns = [
-    'ERROR',
-    'FATAL',
-    'TypeError',
-    'ReferenceError',
-    'UnhandledPromiseRejection',
-    'panic:',
-    'timeout',
-    'ECONNREFUSED',
-    'OOMKilled'
-  ]
+  const validationPatterns = [
+    /\bvalidation\b/i,
+    /\bvalidation failed\b/i,
+    /\binvalid\b/i,
+    /\brequired\b/i,
+    /\bmissing\b/i,
+    /\bbad request\b/i,
+    /\bconstraint\b/i,
+    /\bcheck constraint\b/i,
+    /\bviolates check constraint\b/i,
+    /\bmust be\b/i,
+    /\bnot null\b/i,
+    /\b400\b/i,
+    /\b23514\b/i
+  ];
+
+  const errorPatterns = [
+    /\bERROR\b/i,
+    /\bFATAL\b/i,
+    /\bTypeError\b/i,
+    /\bReferenceError\b/i,
+    /\bSyntaxError\b/i,
+    /\bRangeError\b/i,
+    /\bUnhandledPromiseRejection\b/i,
+    /\bpanic:\b/i,
+    /\btimeout\b/i,
+    /\bECONNREFUSED\b/i,
+    /\bOOMKilled\b/i,
+    /\bException\b/i,
+    /\bStackTrace\b/i,
+    /\bCannot read\b/i,
+    /\bfailed to connect\b/i
+  ];
 
   return events
     .filter(item => {
-      const msg = item.message || ''
+      const msg = (item.message || "").trim();
 
-      return patterns.some(pattern => msg.includes(pattern))
+      // ❌ Validation errors ignore
+      if (validationPatterns.some(p => p.test(msg))) {
+        return false;
+      }
+
+      // ✅ Actual code/runtime errors only
+      return errorPatterns.some(p => p.test(msg));
     })
     .map(item => ({
       timestamp: item.timestamp,
-
       message: item.message
-    }))
+    }));
 }
-
 
 function detectAwsType(logGroupName = "") {
   const name = logGroupName.toLowerCase();
@@ -87,7 +102,7 @@ function detectRuntime(logGroupName = '', logs = []) {
   const combined = `${logGroupName} ${logs
     .map(l => l.message || '')
     .join(' ')}`.toLowerCase()
-  // runtimes
+
   if (combined.includes('nodejs')) return 'Node.js'
   if (combined.includes('python')) return 'Python'
   if (combined.includes('dotnet')) return '.NET'
@@ -95,8 +110,6 @@ function detectRuntime(logGroupName = '', logs = []) {
   if (combined.includes('go')) return 'Go'
   if (combined.includes('ruby')) return 'Ruby'
   if (combined.includes('php')) return 'PHP'
-
-  // frameworks
   if (combined.includes('next')) return 'Next.js App'
   if (combined.includes('react')) return 'React App'
   if (combined.includes('vue')) return 'Vue App'
@@ -105,16 +118,9 @@ function detectRuntime(logGroupName = '', logs = []) {
   return 'Unknown Runtime'
 }
 
-// ========================================
-// GET ALL APPS LOGS
-// ========================================
 
 async function getAllAppsLogs() {
   try {
-    // ====================================
-    // ALL LOG GROUPS
-    // ====================================
-
     const groupsResponse = await logsClient.send(
       new DescribeLogGroupsCommand({})
     )
@@ -123,19 +129,11 @@ async function getAllAppsLogs() {
 
     const finalApps = []
 
-    // ====================================
-    // LOOP ALL LOG GROUPS
-    // ====================================
-
-
-    // For collecting the first N errors across all apps
     let errorsInMemory = [];
 
-    // Parallelize all log group fetches
     const appPromises = groups.map(async (group) => {
       const logGroupName = group.logGroupName;
       try {
-        // GET LATEST STREAM
         const streamResponse = await logsClient.send(
           new DescribeLogStreamsCommand({
             logGroupName,
@@ -148,7 +146,6 @@ async function getAllAppsLogs() {
         if (!latestStream) {
           return null;
         }
-        // GET LOG EVENTS
         const logsResponse = await logsClient.send(
           new GetLogEventsCommand({
             logGroupName,
@@ -160,7 +157,6 @@ async function getAllAppsLogs() {
         const logs = logsResponse.events || [];
         const errors = detectErrors(logs);
 
-        // Add errors to the global memory list, with app info (thread-safe push after all promises)
         const appErrors = errors.map(err => ({
           appId: logGroupName,
           appName: logGroupName.split('/').pop(),
@@ -216,7 +212,6 @@ async function getAllAppsLogs() {
       }
     });
 
-    // Wait for all apps in parallel
     const appResults = await Promise.all(appPromises);
 
     for (const result of appResults) {
@@ -267,12 +262,10 @@ async function getAllAppsLogs() {
     }
 
     finalApps.sort((a, b) => {
-      // first priority = errors
       if (b.totalErrors !== a.totalErrors) {
         return b.totalErrors - a.totalErrors
       }
 
-      // second priority = latest activity
       return b.lastCreated - a.lastCreated
     })
 
@@ -286,7 +279,7 @@ async function getAllAppsLogs() {
       instances: totalApps,
       errors: totalErrors,
       apps: finalApps,
-      errorsInMemory // first N errors across all apps, for fast access
+      errorsInMemory
     }
   } catch (err) {
     console.log('AWS ERROR:', err.message)

@@ -49,10 +49,14 @@ commit_changes() {
 
     if git diff --cached --quiet; then
         echo "⚠️ No changes detected"
+        DIFF_STATS=""
         return
     fi
 
     git commit -m "$COMMIT_MESSAGE"
+
+    DIFF_STATS=$(git show --shortstat HEAD)
+    echo "$DIFF_STATS"
 }
 
 push_changes() {

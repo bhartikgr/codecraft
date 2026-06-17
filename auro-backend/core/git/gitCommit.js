@@ -65,6 +65,7 @@ async function commitProjectRepository({
     {
       cwd: repoPath,
       log,
+      stdio: "pipe"
     }
   )
 
@@ -95,6 +96,7 @@ async function commitProjectRepository({
     command: gitCommand,
     stdout: result.output,
     stderr: '',
+    diff: result.output,
     message: 'Commit successful',
   }
 }

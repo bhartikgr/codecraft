@@ -6,6 +6,7 @@ const { commitProjectRepository } = require('../core/git/gitCommit')
 const { getPaths } = require('../core/utils/paths')
 const fixJobs = new Map();
 const { createLogger } = require('../core/logger/logger')
+const db = require('../config/db')
 
 exports.startFix = async (req, res) => {
   try {
@@ -78,6 +79,18 @@ exports.getFixStatus = async (req, res) => {
   }
 };
 
+function formatDiff(stat) {
+  if (!stat) return "";
+
+  const insertMatch = stat.match(/(\d+)\s+insertion/);
+  const deleteMatch = stat.match(/(\d+)\s+deletion/);
+
+  const insertions = insertMatch ? insertMatch[1] : "0";
+  const deletions = deleteMatch ? deleteMatch[1] : "0";
+
+  return `+${insertions} / -${deletions}`;
+}
+
 exports.commitFix = async (req, res) => {
   try {
     const {
@@ -85,7 +98,9 @@ exports.commitFix = async (req, res) => {
       branch,
       projectName,
       message,
+      summary,
       mainbranch,
+      env
     } = req.body
 
     if (!repoUrl || !branch || !projectName || !message || !mainbranch) {
@@ -115,7 +130,7 @@ exports.commitFix = async (req, res) => {
     devLog(`Project: ${projectName}`)
     devLog(`Message: ${message}`)
 
-    await commitProjectRepository({
+    const result = await commitProjectRepository({
       repoPath: paths.fixDir,
       branchName: branch,
       user: 'dorthyuser',
@@ -124,9 +139,39 @@ exports.commitFix = async (req, res) => {
         uiLog,
         devLog,
       },
-    })
+    });
+
+    const diff = formatDiff(result.stdout || result.output || "");
 
     uiLog('✅ Commit completed')
+
+    try {
+      const insertQuery = `
+    INSERT INTO \`fixed-app\`
+    (app, env, summary, diff, \`commit\`, \`fixed-date\`)
+    VALUES (?, ?, ?, ?, ?, NOW())
+  `
+
+      const values = [
+        projectName,
+        env,
+        summary,
+        diff || '',
+        message,
+      ]
+
+      await new Promise((resolve, reject) => {
+        db.query(insertQuery, values, (err, result) => {
+          if (err) return reject(err)
+          resolve(result)
+        })
+      })
+
+      devLog('✅ Fix data saved to database')
+    } catch (dbErr) {
+      devLog(`⚠️ Failed to save fix data to DB: ${dbErr.message}`)
+      console.error('DB insert error:', dbErr)
+    }
 
     return res.json({
       success: true,
@@ -145,3 +190,82 @@ exports.commitFix = async (req, res) => {
     })
   }
 }
+
+
+exports.fixedApp = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        id,
+        app,
+        env,
+        summary,
+        diff,
+        \`commit\`,
+        \`fixed-date\`
+      FROM \`fixed-app\`
+      ORDER BY \`fixed-date\` DESC
+    `;
+
+    const rows = await new Promise((resolve, reject) => {
+      db.query(query, (err, result) => {
+        if (err) return reject(err);
+        resolve(result);
+      });
+    });
+
+    const formatted = rows.map(r => {
+      let additions = 0;
+      let deletions = 0;
+
+      const diffStr = (r.diff || "").trim();
+
+      let match = diffStr.match(/\+(\d+)[^-\d]*[-−](\d+)/);
+
+      if (match) {
+        additions = parseInt(match[1], 10) || 0;
+        deletions = parseInt(match[2], 10) || 0;
+      } else {
+
+        match = diffStr.match(/\+(\d+)\s*\/\s*[-−](\d+)/);
+        if (match) {
+          additions = parseInt(match[1], 10) || 0;
+          deletions = parseInt(match[2], 10) || 0;
+        }
+      }
+
+      return {
+        id: r.id,
+        app: r.app,
+        env: r.env,
+        summary: r.summary,
+        commit: r.commit,
+        fixedAt: r["fixed-date"]
+          ? new Date(r["fixed-date"]).toLocaleString('en-IN', {
+            year: 'numeric',
+            month: 'short',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          })
+          : '—',
+        additions,
+        deletions,
+        branch: r.env || 'main',
+        duration: "—"
+      };
+    });
+
+    return res.json({
+      success: true,
+      data: formatted,
+    });
+
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};

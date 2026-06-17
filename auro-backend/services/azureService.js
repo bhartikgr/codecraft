@@ -8,53 +8,83 @@ const logsClient = new LogsQueryClient(credential);
 const subscriptionId = process.env.AZURE_SUBSCRIPTION_ID;
 const workspaceId = process.env.AZURE_WORKSPACE_ID;
 
-// FIX 1: Three-path detection to catch both system errors (AppExceptions)
-// and application-level errors (FunctionAppLogs) correctly.
 function detectErrors(events = []) {
   if (!Array.isArray(events)) return [];
 
-  const ERROR_LEVELS = new Set(["error", "critical", "fatal"]);
+  const ERROR_LEVELS = new Set([
+    "error",
+    "critical",
+    "fatal"
+  ]);
 
+  // ❌ Inko fix/commit nahi karna
+  const validationPatterns = [
+    /\bvalidation\b/i,
+    /\bvalidation failed\b/i,
+    /\binvalid\b/i,
+    /\brequired\b/i,
+    /\bmissing\b/i,
+    /\bbad request\b/i,
+    /\bconstraint\b/i,
+    /\bcheck constraint\b/i,
+    /\bviolates check constraint\b/i,
+    /\bmust be\b/i,
+    /\bnot null\b/i,
+    /\b23514\b/i // PostgreSQL check constraint
+  ];
+
+  // ✅ Sirf actual code/runtime issues
   const errorPatterns = [
     /\bFATAL\b/i,
     /\bTypeError\b/i,
     /\bReferenceError\b/i,
+    /\bSyntaxError\b/i,
+    /\bRangeError\b/i,
     /\bUnhandledPromiseRejection\b/i,
     /\btimeout\b/i,
     /\bECONNREFUSED\b/i,
     /\bOOMKilled\b/i,
-    /\bERROR\b/i,
-    /\bWARNING\b/i
+    /\bException\b/i,
+    /\bStackTrace\b/i,
+    /\bUnhandled\b/i,
+    /\bCannot read\b/i,
+    /\bfailed to connect\b/i
   ];
 
   return events.filter(item => {
-    // Path 1: numeric SeverityLevel — AppTraces / AppExceptions
-    // (0=Verbose, 1=Information, 2=Warning, 3=Error, 4=Critical)
+    const msg = (
+      item.Message ||
+      item.message ||
+      item.RenderedDescription ||
+      ""
+    )
+      .toString()
+      .trim();
+
+    // Step 1: Validation errors ignore
+    if (validationPatterns.some(p => p.test(msg))) {
+      return false;
+    }
+
+    // Step 2: Actual runtime errors
     if (typeof item.SeverityLevel === "number") {
       return item.SeverityLevel >= 3;
     }
 
-    // Path 2: string Level field — FunctionAppLogs
-    // Catches [Error] / [Critical] written by the Functions host
     const levelStr = (
       item.Level ||
       item.level ||
       item.Category ||
       item.category ||
       ""
-    ).toLowerCase().trim();
+    )
+      .toString()
+      .toLowerCase()
+      .trim();
 
     if (levelStr) {
       return ERROR_LEVELS.has(levelStr);
     }
-
-    // Path 3: last resort — regex pattern match on the raw message text
-    // Uses word boundaries (\b) to avoid false positives like "Errors=0"
-    const msg =
-      item.Message ||
-      item.message ||
-      item.RenderedDescription ||
-      "";
 
     return errorPatterns.some(p => p.test(msg));
   });
@@ -94,11 +124,6 @@ function timeRange(hours = 24) {
   };
 }
 
-// FIX 2: Query now targets three specific tables instead of "search *":
-//   - AppTraces:       structured errors/warnings via SeverityLevel >= 3
-//   - AppExceptions:   unhandled exceptions (DB failures, crashes, etc.)
-//   - FunctionAppLogs: application-level [Error]/[Critical] log entries
-// This eliminates host heartbeat/init messages that were flooding results.
 async function fetchLogsOnce() {
   try {
     const res = await logsClient.queryWorkspace(
@@ -112,7 +137,7 @@ async function fetchLogsOnce() {
         (FunctionAppLogs
           | where Level in ("Error", "Critical")
           | project TimeGenerated, AppRoleName = HostInstanceId, Message, SeverityLevel = -1, Level)
-      | where TimeGenerated > ago(15m)
+      | where TimeGenerated > ago(24h)
       | order by TimeGenerated desc`,
       timeRange(24)
     );

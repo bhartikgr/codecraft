@@ -92,12 +92,18 @@ export function FixFlow({ app, onClose }) {
         return;
       }
 
+      const logsText = app.logs?.slice(0, 4)
+        .map((l) => (typeof l === "string" ? l : l.message))
+        .join("\n");
+
       await commitFixFlow({
         appId: app.id,
         projectName: app.name,
+        env: app.env,
         repoUrl: appRepo,
         branch: appBranch,
         mainbranch: mainBranch,
+        summary: app.error + logsText,
         message: msg,
       });
 

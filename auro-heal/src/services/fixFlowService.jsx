@@ -14,3 +14,8 @@ export const commitFixFlow = async (payload) => {
     const res = await api.post("/fixflow/commit", payload);
     return res.data;
 };
+
+export const fixedApp = async (payload) => {
+    const res = await api.post("/fixflow/fixed", payload);
+    return res.data;
+}
